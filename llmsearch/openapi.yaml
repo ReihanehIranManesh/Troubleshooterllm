@@ -1,0 +1,101 @@
+openapi: 3.0.1
+info:
+  title: Web Search Plugin
+  description: A plugin that searches the web for information requested. 
+  version: 'v1'
+servers:
+  - url: https://tuuyi.io
+paths:
+  /search/quick:
+    get:
+      operationId: quicksearch
+      summary: a search optimized for speed of response with a moderate number results.
+      parameters:
+      - in: query
+        name: query
+        schema:
+            type: string
+        required: true
+        description: phrase describing the information needed.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+
+  /search/full:
+    get:
+      operationId: fullsearch
+      summary: a search optimized for maximum number of results while trying to stay within chatgpt timing. this entrypoint may timeout, and may offer quicker or more complete response if a search request is repeated
+      parameters:
+      - in: query
+        name: query
+        schema:
+            type: string
+        required: true
+        description: phrase describing the information needed.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+  /search/image:
+    get:
+      operationId: imagesearch
+      summary: search for image urls (.jpg or .png) corresponding to query
+      parameters:
+      - in: query
+        name: query
+        schema:
+            type: string
+        required: true
+        description: phrase describing the image content wanted
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageResponse'
+
+components:
+  schemas:
+    SearchResponse:
+      type: object
+      properties:
+        response:
+          type: array
+          items:
+            $ref: "#/components/schemas/SiteResponse"
+          description: list of responses from specific urls visited.
+        credibility_definitions:
+          type: {'credibility':'description'}
+          description: a mapping between '#/components/schemas/SiteResponse credibility values and string definitions for those values.
+    SiteResponse:
+      type: object
+      properties:
+        source:
+          type: string
+          description: the domain name of the page visited, e.g. 'weatherunderground.com'
+        url:
+          type: string
+          description: the full url of the page visited
+        credibility:
+          type: string
+          enum: ['Official Source', 'Whitelisted Source', 'Third-Party Source', 'Blacklisted Source']
+          description: source credibility, as defined in 'credibility_definitions'
+        text:
+          type: string
+          description: the text relevant to the user query that was extracted from this url
+    ImageResponse:
+      type: object
+      properties:
+          response:
+            type: array
+            items:
+              type: string
+              description: a url for an image corresponding to the query. the image, with url attached, should be displayed as your response to the user query
